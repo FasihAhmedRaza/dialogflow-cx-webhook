@@ -1,6 +1,5 @@
 const formatResponseForDialogflow = (texts, sessionInfo, targetFlow, targetPage) => {
-
-    messages = []
+    let messages = [];
 
     texts.forEach(text => {
         messages.push(
@@ -33,11 +32,10 @@ const formatResponseForDialogflow = (texts, sessionInfo, targetFlow, targetPage)
         responseData['targetPage'] = targetPage;
     }
 
-    return responseData
+    return responseData;
 };
 
 const getErrorMessage = () => {
-
     return formatResponseForDialogflow(
         [
             'We are facing a technical issue.',

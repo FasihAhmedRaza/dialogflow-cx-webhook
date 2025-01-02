@@ -4,7 +4,6 @@ const router = express.Router();
 const CONTROLLER = require('../controllers/export_controller');
 
 router.post('/dialogflow', async (req, res) => {
-
     let tag = req.body.fulfillmentInfo.tag;
 
     console.log('A new request came...');
@@ -15,11 +14,14 @@ router.post('/dialogflow', async (req, res) => {
         res.send(responseData);
     } else {
         res.send(
-            CONTROLLER.util.formatResponse(
+            CONTROLLER.util.formatResponseForDialogflow(
                 [
                     'This is from the webhook.',
                     'There is no tag set for this request.'
-                ]
+                ],
+                '',
+                '',
+                ''
             )
         );
     }

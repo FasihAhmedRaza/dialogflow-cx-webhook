@@ -1,64 +1,297 @@
-# Dialogflow CX Webhook sample
-Hi everyone, this a starter code for a sample webhook that can generate response for **Dialogflow CX**, it also manages a **targetFlo** and/or **tagetPage** as well.
+# Dialogflow CX Webhook with OpenAI Integration
 
-## Youtube
-You can find a video explaining the usage of this repository [here](). 
+This is an enhanced webhook for **Dialogflow CX** that integrates OpenAI's GPT models to provide intelligent fallback responses when the main system can't handle user requests.
 
-## Files
-This repository contains the following file structure.
+## Features
+
+- **OpenAI Integration**: Uses GPT-3.5-turbo for intelligent fallback responses
+- **Conversation Management**: Tracks conversation history and context
+- **Intent Analysis**: Analyzes user intent using OpenAI for better understanding
+- **Smart Fallbacks**: Provides contextual responses based on conversation history
+- **Session Management**: Maintains conversation state across requests
+- **Monitoring**: Built-in conversation statistics and reporting
+
+## Architecture
 
 ```
-├── controllers
-│   ├── export_controller.js
-│   ├── sample_controller.js
-│   └── util.js
-├── package.json
-├── README.md
-├── routes
-│   ├── dialogflow_route.js
-│   └── home_route.js
-└── src
-    └── index.js
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Dialogflow    │───▶│   Webhook        │───▶│   OpenAI API    │
+│   CX            │    │   Handler        │    │   (GPT-3.5)     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌──────────────────┐
+                       │   Conversation   │
+                       │   Service        │
+                       └──────────────────┘
 ```
 
-`index.js` is the entry point, which calls the `routes`, from here we call the individual `controller` for that request.
+## Installation
 
-## How to run it
-You first need to install the required packages to run the code, you can install the packages using
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd dialogflow-cx-webhook
+   ```
 
-> ```npm install --save```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-then run the `index.js` file with either
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and add your OpenAI API key:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   PORT=5000
+   NODE_ENV=development
+   ```
 
-> ```node src/index.js```
+4. **Build the TypeScript code**
+   ```bash
+   npm run build
+   ```
 
-or
+5. **Start the server**
+   ```bash
+   npm start
+   ```
 
-> ```npm start```
+## Configuration
 
-## Expose localhost
-When you run this application locally, it will not provide you a public URL to use with **Dialogflow CX** webhook section, you need to expose your local host to internet, no worries, we can acheive this by using **NGROK**.
+### Environment Variables
 
-Install **NGROK** from [here](https://ngrok.com/download).
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `OPENAI_API_KEY` | Your OpenAI API key | Yes | - |
+| `PORT` | Server port | No | 5000 |
+| `NODE_ENV` | Environment mode | No | development |
+| `OPENAI_MODEL` | OpenAI model to use | No | gpt-3.5-turbo |
+| `OPENAI_MAX_TOKENS` | Maximum tokens for responses | No | 150 |
+| `OPENAI_TEMPERATURE` | Response creativity (0-1) | No | 0.7 |
 
-Then run
+### OpenAI Model Configuration
 
-> ```ngrok http 5000```
+The system is configured to use GPT-3.5-turbo with the following settings:
+- **Max Tokens**: 150 (configurable)
+- **Temperature**: 0.7 (balanced creativity)
+- **Presence Penalty**: 0.1 (reduces repetition)
+- **Frequency Penalty**: 0.1 (encourages diverse responses)
 
-Here, make sure the port `5000` is the same used in the `index.js` file to avoide any errors.
+## Usage
 
-## Usefull links
-* [Node](https://nodejs.org/en/download/)
-* [VS Code](https://code.visualstudio.com/download)
-* [Dialogflow CX Request/Response](https://cloud.google.com/dialogflow/cx/docs/concept/webhook)
-* [NGROK](https://ngrok.com/download)
+### Basic Webhook Integration
 
+1. **Set up Dialogflow CX webhook**
+   - URL: `https://your-domain.com/dialogflow`
+   - Method: POST
 
-# About me
+2. **Configure webhook tags**
+   - `create_project`: Handle project creation
+   - `get_status`: Check project status
+   - `fallback`: Trigger OpenAI fallback
+   - Any unknown tag will automatically use OpenAI fallback
 
-I am `Raj Kapadia`, I am passionate about `AI/ML/DL` and their use in different domains, I also love to build `chatbots` using `Google Dialogflow ES/CX`, I have backend development experience with Python[Flask], and NodeJS[Express] For any work, you can reach out to me at...
+### API Endpoints
 
-* [LinkedIn](https://www.linkedin.com/in/rajkkapadia/)
-* [Fiverr](https://www.fiverr.com/rajkkapadia​)
-* [Upwork](https://www.upwork.com/freelancers/~0176aeacfcff7f1fc2)
-* [Youtube](https://www.youtube.com/channel/UCOT01XvBSj12xQsANtTeAcQ)
+#### Main Webhook
+```
+POST /dialogflow
+```
+Handles all Dialogflow CX webhook requests.
+
+#### Health Check
+```
+GET /health
+```
+Returns service health status.
+
+#### Test Fallback
+```
+POST /test-fallback
+Body: { "message": "test message", "sessionId": "optional" }
+```
+Test the OpenAI fallback functionality.
+
+#### Conversation Stats
+```
+GET /conversation/:sessionId/stats
+```
+Get conversation statistics for a session.
+
+## How It Works
+
+### 1. Request Processing
+When a webhook request comes in:
+1. The system extracts the tag and parameters
+2. Routes to appropriate handler based on tag
+3. If tag is unknown or fails, triggers OpenAI fallback
+
+### 2. OpenAI Fallback
+The fallback system:
+1. Analyzes user intent using OpenAI
+2. Generates contextual response based on conversation history
+3. Provides suggested actions for better user experience
+4. Maintains conversation context for future interactions
+
+### 3. Conversation Management
+- Tracks all user and assistant messages
+- Maintains session parameters
+- Provides conversation statistics and summaries
+- Supports contact assignment for CRM integration
+
+## Example Responses
+
+### Successful Fallback
+```json
+{
+  "fulfillment_response": {
+    "messages": [
+      {
+        "text": {
+          "text": ["I understand you're asking about data recovery services. Let me help you with that."]
+        }
+      }
+    ]
+  },
+  "session_info": {
+    "session": "projects/xxx/locations/xxx/agents/xxx/sessions/xxx",
+    "parameters": {
+      "fallback_handled": true,
+      "openai_intent": "data_recovery_inquiry",
+      "openai_confidence": 0.85
+    }
+  }
+}
+```
+
+### Error Handling
+```json
+{
+  "fulfillment_response": {
+    "messages": [
+      {
+        "text": {
+          "text": ["I'm experiencing technical difficulties. Please try again or contact support."]
+        }
+      }
+    ]
+  },
+  "session_info": {
+    "session": "projects/xxx/locations/xxx/agents/xxx/sessions/xxx",
+    "parameters": {
+      "error": "fallback_failed",
+      "fallback_handled": false
+    }
+  }
+}
+```
+
+## Customization
+
+### Adding New Tags
+1. Add new case in `reply()` method in `webhook-handler.ts`
+2. Implement the handler method
+3. Add fallback support for error cases
+
+### Modifying OpenAI Prompts
+Edit the system prompts in `src/services/openai.ts`:
+- `generateFallbackResponse()`: Main fallback response generation
+- `analyzeUserIntent()`: Intent analysis
+- `generateSuggestedResponses()`: Response suggestions
+
+### Conversation Context
+Modify the conversation context in `src/services/conversation.ts`:
+- Add new message types
+- Extend session parameters
+- Customize conversation flow
+
+## Monitoring and Analytics
+
+### Built-in Metrics
+- Message count (user/assistant)
+- Fallback usage frequency
+- Conversation duration
+- Session parameters
+
+### Logging
+The system logs:
+- All webhook requests
+- Fallback triggers
+- OpenAI API calls
+- Error conditions
+- Conversation statistics
+
+## Troubleshooting
+
+### Common Issues
+
+1. **OpenAI API Key Error**
+   - Ensure `OPENAI_API_KEY` is set in `.env`
+   - Verify API key is valid and has sufficient credits
+
+2. **TypeScript Build Errors**
+   - Run `npm run build` to check for compilation errors
+   - Ensure all dependencies are installed
+
+3. **Webhook Timeout**
+   - OpenAI API calls may take time
+   - Consider reducing `max_tokens` for faster responses
+   - Implement request timeout handling
+
+### Debug Mode
+Enable debug logging:
+```env
+ENABLE_DEBUG_LOGGING=true
+LOG_LEVEL=debug
+```
+
+## Development
+
+### Project Structure
+```
+src/
+├── services/
+│   ├── openai.ts          # OpenAI integration
+│   └── conversation.ts    # Conversation management
+├── webhook-handler.ts     # Main webhook logic
+└── index.js              # Entry point
+
+routes/
+└── dialogflow_route.js   # Express routes
+
+controllers/               # Legacy controllers (can be removed)
+```
+
+### Adding New Features
+1. Create new service in `src/services/`
+2. Add corresponding interface definitions
+3. Update webhook handler
+4. Add tests and documentation
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+ISC License
+
+## Support
+
+For issues and questions:
+- Check the troubleshooting section
+- Review the logs for error details
+- Contact the development team
+
+---
+
+**Note**: This enhanced webhook provides intelligent fallback responses using OpenAI, making your Dialogflow CX bot more capable of handling unexpected user inputs while maintaining conversation context and providing helpful responses.
